@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Image Experiment</title>
+
+<style>
+
+html, body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:black;
+    font-family:Arial;
+    color:white;
+}
+
+#menu{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    text-align:center;
+}
+
+button{
+    padding:10px 20px;
+    margin:5px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+#viewer{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100vw;
+    height:100vh;
+    object-fit:contain;
+    display:none;
+}
+
+/* TIMER */
+#timer{
+    position:absolute;
+    top:10px;
+    right:20px;
+    font-size:20px;
+    display:none;
+}
+
+/* STOP BUTTON */
+#stopBtn{
+    position:absolute;
+    top:10px;
+    left:20px;
+    display:none;
+}
+
+/* COUNTDOWN */
+#countdown{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:80px;
+    display:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="menu">
+
+<h2>Image Slideshow Experiment</h2>
+
+<p>
+Images auto-loaded from Images/1.png → 300.png<br><br>
+• Start 10 → shows first 10 images<br>
+• Start Endless → shows all images<br>
+• Each image = 3 seconds<br>
+• Press ESC or Stop to exit
+</p>
+
+<label>
+<input type="checkbox" id="showTime" checked> Show Timer
+</label>
+
+<br><br>
+
+<button onclick="prepareStart(10)">Start 10</button>
+<button onclick="prepareStart('all')">Start Endless</button>
+
+</div>
+
+<img id="viewer">
+<div id="timer">0s</div>
+<button id="stopBtn" onclick="stopSlideshow()">Stop</button>
+<div id="countdown"></div>
+
+<script>
+
+let images = []
+let index = 0
+let slideInterval
+let timerInterval
+let startTime
+let modeGlobal
+
+const viewer = document.getElementById("viewer")
+const timer = document.getElementById("timer")
+const countdown = document.getElementById("countdown")
+
+// LOAD PNG IMAGES
+for(let i=1;i<=300;i++){
+    images.push("Images/" + i + ".png")
+}
+
+// 🔥 PREPARE START (with reset + countdown)
+function prepareStart(mode){
+
+    modeGlobal = mode
+
+    // FULL RESET (fix flicker issue)
+    clearInterval(slideInterval)
+    clearInterval(timerInterval)
+
+    viewer.src = ""
+    timer.innerText = "0s"
+    index = 0
+
+    document.getElementById("menu").style.display = "none"
+    document.getElementById("stopBtn").style.display = "block"
+
+    viewer.style.display = "none"
+    timer.style.display = "none"
+
+    startCountdown()
+
+}
+
+// ⏳ COUNTDOWN
+function startCountdown(){
+
+    let count = 3
+    countdown.style.display = "block"
+    countdown.innerText = count
+
+    let cd = setInterval(()=>{
+
+        count--
+
+        if(count === 0){
+            clearInterval(cd)
+            countdown.style.display = "none"
+            startSlideshow()
+            return
+        }
+
+        countdown.innerText = count
+
+    },1000)
+
+}
+
+// ▶️ START ACTUAL SLIDESHOW
+function startSlideshow(){
+
+    viewer.style.display = "block"
+
+    let showTimer = document.getElementById("showTime").checked
+
+    if(showTimer){
+        timer.style.display = "block"
+    }
+
+    startTime = Date.now()
+
+    let limit = (modeGlobal === 'all') ? images.length : 10
+
+    // ✅ SHOW FIRST IMAGE IMMEDIATELY
+    viewer.src = images[0]
+    index = 1
+
+    // TIMER
+    if(showTimer){
+        timerInterval = setInterval(()=>{
+            let seconds = Math.floor((Date.now()-startTime)/1000)
+            timer.innerText = seconds + "s"
+        },1000)
+    }
+
+    // SLIDES
+    slideInterval = setInterval(()=>{
+
+        if(index >= limit){
+            stopSlideshow()
+            return
+        }
+
+        viewer.src = images[index]
+        index++
+
+    },3000)
+
+}
+
+
+// 🛑 STOP
+function stopSlideshow(){
+
+    clearInterval(slideInterval)
+    clearInterval(timerInterval)
+
+    viewer.style.display = "none"
+    document.getElementById("menu").style.display = "block"
+    document.getElementById("stopBtn").style.display = "none"
+    timer.style.display = "none"
+    countdown.style.display = "none"
+
+    viewer.src = ""
+    timer.innerText = "0s"
+    index = 0
+
+}
+
+// ESC key
+document.addEventListener("keydown",(e)=>{
+    if(e.key==="Escape"){
+        stopSlideshow()
+    }
+})
+
+</script>
+
+</body>
+</html>
